@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import bcrypt from 'bcrypt';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -20,8 +21,22 @@ const FormSchema = z.object({
   date: z.string(),
 });
 
+const AccountFormSchema = z.object({
+  id: z.string(),
+  name: z.string({
+    invalid_type_error: 'Please enter your full name.',
+  }),
+  email: z.string({
+    invalid_type_error: 'Please enter your email.',
+  }),
+  password: z.string({
+    invalid_type_error: 'Please enter a password',
+  }),
+});
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
+const CreateAccount = AccountFormSchema.omit({ id: true });
 
 export type State = {
   errors?: {
@@ -31,6 +46,44 @@ export type State = {
   };
   message?: string | null;
 };
+
+export type UserState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    password?: string[];
+  };
+};
+
+export async function createUser(prevState: State, formData: FormData) {
+  const validatedFields = CreateAccount.safeParse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Account.',
+    };
+  }
+
+  const { name, email, password } = validatedFields.data;
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  try {
+    await sql`
+      INSERT INTO users (name, email, password)
+      VALUES (${name}, ${email}, ${hashedPassword})
+      `;
+  } catch (error) {
+    return {
+      message: 'Database error: Failed to Create Account',
+    };
+  }
+  revalidatePath('/signup');
+  redirect('/login');
+}
 
 export async function createInvoice(prevState: State, formData: FormData) {
   const validatedFields = CreateInvoice.safeParse({
