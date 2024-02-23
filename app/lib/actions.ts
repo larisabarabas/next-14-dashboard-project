@@ -53,14 +53,18 @@ export type UserState = {
     email?: string[];
     password?: string[];
   };
+  message?: string | null;
 };
 
-export async function createUser(prevState: State, formData: FormData) {
+export async function createUser(prevState: UserState, formData: FormData) {
   const validatedFields = CreateAccount.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
     password: formData.get('password'),
   });
+
+  console.log(validatedFields);
+
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -79,6 +83,7 @@ export async function createUser(prevState: State, formData: FormData) {
   } catch (error) {
     return {
       message: 'Database error: Failed to Create Account',
+      errors: {},
     };
   }
   revalidatePath('/signup');
