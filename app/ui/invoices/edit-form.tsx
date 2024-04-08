@@ -22,7 +22,6 @@ export default function EditInvoiceForm({
   const initialState = { message: null, errors: {} };
   const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
   const [state, dispatch] = useFormState(updateInvoiceWithId, initialState);
-  console.log(state);
 
   return (
     <form action={dispatch} aria-describedby="form-error">

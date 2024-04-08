@@ -63,8 +63,6 @@ export async function createUser(prevState: UserState, formData: FormData) {
     password: formData.get('password'),
   });
 
-  console.log(validatedFields);
-
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,

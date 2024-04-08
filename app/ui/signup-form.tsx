@@ -14,7 +14,6 @@ import { createUser } from '../lib/actions';
 export default function SignupForm() {
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(createUser, initialState);
-  console.log(state);
 
   return (
     <form className="space-y-3" action={dispatch} aria-describedby="form-error">
